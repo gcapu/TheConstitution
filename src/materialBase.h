@@ -3,11 +3,35 @@
 
 namespace TC
 {
+
+enum materialMode {
+  M3D,
+  M2D,
+  PE,
+  PS,
+  GPS
+  };
+
+
+
+template<typename Material>
+struct material_traits
+  {
+  enum {
+    Dim = Material::Dim,
+    StiffDim = Material::StiffDim,
+    //Mode = Material::Mode
+    //IsProjective = (int(Mode) == int(Projective))
+    };
+  };
+
+
 template <typename T>
-class Material{
+class Material3D{
 public:
   virtual Eigen::Matrix<T, 3, 3> Stress(const Eigen::Ref<const Eigen::Matrix<T, 3, 3>>& F) = 0;
   virtual Eigen::Matrix<T, 6, 6> Stiffness(const Eigen::Ref<const Eigen::Matrix<T, 3, 3>>& F) = 0;
+  virtual ~Material3D(){}
   };
 
 template <typename T>
@@ -15,11 +39,16 @@ class Material2D {
 public:
   virtual Eigen::Matrix<T, 2, 2> Stress(const Eigen::Ref<const Eigen::Matrix<T, 2, 2>>& F) = 0;
   virtual Eigen::Matrix<T, 3, 3> Stiffness(const Eigen::Ref<const Eigen::Matrix<T, 2, 2>>& F) = 0;
+  virtual ~Material2D() {}
   };
 
-template <typename Derived>
-typename Eigen::EigenBase<Derived>::Index cols(const Eigen::EigenBase<Derived>& a)
-  {
-  return a.cols();
-  }
-}
+template <typename T>
+class Material{
+public:  
+  virtual Eigen::Matrix<T, 2, 2> Stress(const Eigen::Ref<const Eigen::Matrix<T, 2, 2>>& F) = 0;
+  virtual Eigen::Matrix<T, 3, 3> Stress(const Eigen::Ref<const Eigen::Matrix<T, 3, 3>>& F) = 0;
+  virtual Eigen::Matrix<T, 3, 3> Stiffness(const Eigen::Ref<const Eigen::Matrix<T, 2, 2>>& F) = 0;
+  virtual Eigen::Matrix<T, 6, 6> Stiffness(const Eigen::Ref<const Eigen::Matrix<T, 3, 3>>& F) = 0;
+  virtual ~Material() {}
+};
+}//namespace TC
