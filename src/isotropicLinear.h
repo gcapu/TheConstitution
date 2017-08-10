@@ -9,7 +9,7 @@ namespace TC
 template <typename _Scalar, int _Dim>
 class IsotropicLinear {
 public:
-  typedef typename _Scalar Scalar;
+  typedef _Scalar Scalar;
 
   enum { 
       Dim = _Dim,
@@ -31,25 +31,14 @@ public:
   Scalar G() const {return .5*E() / (1 + nu());}
   };
 
-/*template<typename _Scalar, int _Dim>
-struct traits<IsotropicLinear<_Scalar, _Dim> >
-  {
-  typedef _Scalar Scalar;
-  enum {
-    Dim = _Dim,
-    StiffDim = _Dim = 3 ? 6 : 3
-    };
-  };*/
-
-
 template <typename _Scalar, int _Dim>
 typename IsotropicLinear<_Scalar, _Dim>::StiffType 
     IsotropicLinear<_Scalar, _Dim>::Stiffness() const
   {
   StiffType K = StiffType::Zero();
   Scalar ee = E()/((1+nu())*(1-2*nu()));
-  K.topLeftCorner<Dim, Dim>() = MatrixType::Constant(nu()*ee) + (1-2*nu())*ee * MatrixType::Identity();
-  K.diagonal().tail<StiffDim - Dim>() =  Eigen::Matrix<Scalar, StiffDim - Dim, 1>::Constant(G());
+  K.template topLeftCorner<Dim, Dim>() = MatrixType::Constant(nu()*ee) + (1-2*nu())*ee * MatrixType::Identity();
+  K.diagonal().template tail<StiffDim - Dim>() =  Eigen::Matrix<Scalar, StiffDim - Dim, 1>::Constant(G());
   return K;
   }
 

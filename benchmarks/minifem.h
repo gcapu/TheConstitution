@@ -17,7 +17,7 @@ namespace TC
 template <typename _Scalar, int _Dim>
 class Node{
 public:
-  typedef typename _Scalar Scalar;
+  typedef _Scalar Scalar;
   enum {Dim = _Dim};
   typedef Eigen::Matrix<Scalar, Dim, 1> VectorType;
 protected:
@@ -41,7 +41,7 @@ public:
 template <typename _Scalar, int _Dim, int _NumNodes>
 class Element{
 public:
-  typedef typename _Scalar Scalar;
+  typedef _Scalar Scalar;
   enum { 
       Dim = _Dim,
       NumNodes = _NumNodes,
@@ -65,14 +65,19 @@ public:
   };
 
 template <typename Mat>
-class C3D20R:Element<typename Mat::Scalar, Mat::Dim, 20>{
+class C3D20R: Element<typename Mat::Scalar, Mat::Dim, 20>{
+public:
+  typedef Element<typename Mat::Scalar, Mat::Dim, 20> Base;
+  typedef typename Base::VectorType VectorType;
+  typedef typename Base::VectorType MatrixType;
+protected:
   Mat _mat;
 public:
   C3D20R(const Mat& mat): _mat(mat){}
   VectorType F() const;
-  MatrixType K() const;
-  MatrixType M() const;
-  MatrixType LM() const;
+  //MatrixType K() const;
+  //MatrixType M() const;
+  //MatrixType LM() const;
   };
 
 //----------------------------------------------------------------------------
@@ -81,7 +86,7 @@ public:
 template <typename _Scalar = double, int _Dim = 3>
 class FEM{
 public:
-  typedef typename _Scalar Scalar;
+  typedef _Scalar Scalar;
   enum {
     Dim = _Dim,
     elDim = _Dim == 3 ? 20 : 8 //cubic elements with interior node
@@ -102,13 +107,13 @@ public:
 
 
 template <typename Mat>
-C3D20R::VectorType C3D20R::F() const {
+typename C3D20R<Mat>::VectorType C3D20R<Mat>::F() const {
   //obtaining uIi. Note that this is the transpose of belytschkos notation
   //Also, since I need it in matrix form, this is faster than mapping UpdateD() 
   Eigen::Matrix<double, 8, 3> u;
 
-  for (int i = 0; i< 8; i++)
-    u.row(i) = 
+  //for (int i = 0; i< 8; i++)
+  //u.row(i) =
 
   Eigen::Matrix3d H;
   Eigen::Matrix3d E;
@@ -116,7 +121,7 @@ C3D20R::VectorType C3D20R::F() const {
   //Eigen::Matrix3d S;
   //Eigen::Matrix3d P;
 
-  for (int i = 0; i<ips.size(); i++)
+  /*for (int i = 0; i<ips.size(); i++)
     {
     auto& dhdX = ip_info.at(i).dhdX; //shorten the name
     H.noalias() = dhdX.transpose()*u; //transpose of the definition in Belytschko
@@ -135,7 +140,7 @@ C3D20R::VectorType C3D20R::F() const {
       Fi.noalias() = k*dhdX*GetMaterial().stress3D(E)*(H + Eigen::Matrix3d::Identity());
     else
       Fi.noalias() += k*dhdX*GetMaterial().stress3D(E)*(H + Eigen::Matrix3d::Identity());
-    }
+    }*/
 
   }
 
