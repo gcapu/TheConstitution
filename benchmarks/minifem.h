@@ -25,11 +25,11 @@ protected:
   VectorType _u;
 public:
   EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Node() {_u.setZero();}
-  Node(const VectorType& X):_X(X) { _u.setZero(); }
-  const VectorType& X() { return _X; }
-  const VectorType& u() { return _u; }
-  VectorType x() {return X()+u();}
+  Node() {_u.setZero();} // <-- maybe I should change it for Node(const vec&u = vec::zero()):_u(u){}
+  Node(const VectorType& X):_X(X) { _u.setZero(); } // and here too
+  const VectorType& X() const { return _X; }
+  const VectorType& u() const { return _u; }
+  VectorType x() const {return X()+u();}
   void setX(const VectorType& X) { _X = X; }
   void setu(const VectorType& u) { _u = u; }
   void setx(const VectorType& x) { _u = x - X(); }
@@ -47,33 +47,40 @@ public:
       NumNodes = _NumNodes,
       NumDofs = _NumNodes*_Dim
       };
-  typedef std::array<int, Dim> ConnType;
+  typedef std::array<int, Dim> ConnType; 
   typedef Eigen::Matrix<Scalar, NumDofs, 1> VectorType;
   typedef Eigen::Matrix<Scalar, NumDofs, NumDofs> MatrixType;
 protected:
   ConnType _conn;
+  const std::vector<Node>& _nodes;
 public:
-  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
-  Element(){}
-  Element(const ConnType& conn):_conn(conn){}
-  ConnType& conn() {return _conn;}
+  Element(const std::vector<Node>& nodes): _nodes(nodes){}
+  const Node& node(int id) const {return _nodes[_conn[i]];}
   template <typename T>
   void setConn(const T& conn){
     if(conn.size() < _conn.size()) return;
-    for(int i = 0; i<_conn.size(); i++) _conn[i] = conn[i];
+    for(int i = 0; i<_conn.size(); i++) 
+      _conn[i] = conn[i];
     }
   };
 
-template <typename Mat>
-class C3D20R: Element<typename Mat::Scalar, Mat::Dim, 20>{
+//Quadratic 3D element with 20 nodes and reduced integration.
+//We can template the material because all benchmarks contain contain 
+//  models with only one material. It's not a good idea otherwise.
+template <typename MatType>
+class C3D20R: Element<typename MatType::Scalar, 3, 20>{
 public:
-  typedef Element<typename Mat::Scalar, Mat::Dim, 20> Base;
+  typedef Element<typename MatType::Scalar, MatType::Dim, 20> Base;
   typedef typename Base::VectorType VectorType;
   typedef typename Base::VectorType MatrixType;
 protected:
-  Mat _mat;
+  MatType _mat;
 public:
-  C3D20R(const Mat& mat): _mat(mat){}
+  C3D20R(const MatType& mat, const std::vector<Node>& nodes): 
+      Element(nodes), _mat(mat)
+    {
+    EIGEN_STATIC_ASSERT(MatType::Dim == 3, YOU_MADE_A_PROGRAMMING_MISTAKE);
+    }
   VectorType F() const;
   //MatrixType K() const;
   //MatrixType M() const;
@@ -106,17 +113,18 @@ public:
 //----------------------------------------------------------------------------
 
 
-template <typename Mat>
-typename C3D20R<Mat>::VectorType C3D20R<Mat>::F() const {
+template <typename MatType>
+typename C3D20R<MatType>::VectorType C3D20R<MatType>::F() const {
   //obtaining uIi. Note that this is the transpose of belytschkos notation
-  //Also, since I need it in matrix form, this is faster than mapping UpdateD() 
-  Eigen::Matrix<double, 8, 3> u;
+  Eigen::Matrix<Scalar, 8, 3> u;
+  for (int i = 0; i< 8; i++)
+    u.row(i) = node(i).u().transpose();
+  //storage for the force
+  Eigen::Matrix<Scalar, 8, 3> f = Eigen::Matrix<Scalar, 8, 3>::Zero();
 
-  //for (int i = 0; i< 8; i++)
-  //u.row(i) =
 
-  Eigen::Matrix3d H;
-  Eigen::Matrix3d E;
+  Eigen::Matrix3d H; //displacement gradient (not the deformation gradient)
+  Eigen::Matrix3d E; //strain
   //Eigen::Matrix3d F;
   //Eigen::Matrix3d S;
   //Eigen::Matrix3d P;
