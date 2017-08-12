@@ -47,6 +47,7 @@ public:
       NumNodes = _NumNodes,
       NumDofs = _NumNodes*_Dim
       };
+  typedef Node<Scalar, Dim> Node;
   typedef std::array<int, Dim> ConnType; 
   typedef Eigen::Matrix<Scalar, NumDofs, 1> VectorType;
   typedef Eigen::Matrix<Scalar, NumDofs, NumDofs> MatrixType;
@@ -55,7 +56,7 @@ protected:
   const std::vector<Node>& _nodes;
 public:
   Element(const std::vector<Node>& nodes): _nodes(nodes){}
-  const Node& node(int id) const {return _nodes[_conn[i]];}
+  const Node& node(int nodeNumber) const {return _nodes[_conn[nodeNumber]];}
   template <typename T>
   void setConn(const T& conn){
     if(conn.size() < _conn.size()) return;
@@ -70,14 +71,16 @@ public:
 template <typename MatType>
 class C3D20R: Element<typename MatType::Scalar, 3, 20>{
 public:
-  typedef Element<typename MatType::Scalar, MatType::Dim, 20> Base;
+  typedef Element<typename MatType::Scalar, 3, 20> Base;
+  typedef typename Base::Scalar Scalar;
+  typedef typename Base::Node Node;
   typedef typename Base::VectorType VectorType;
   typedef typename Base::VectorType MatrixType;
 protected:
   MatType _mat;
 public:
   C3D20R(const MatType& mat, const std::vector<Node>& nodes): 
-      Element(nodes), _mat(mat)
+      Base(nodes), _mat(mat)
     {
     EIGEN_STATIC_ASSERT(MatType::Dim == 3, YOU_MADE_A_PROGRAMMING_MISTAKE);
     }
@@ -112,13 +115,12 @@ public:
 // function definitions
 //----------------------------------------------------------------------------
 
-
 template <typename MatType>
 typename C3D20R<MatType>::VectorType C3D20R<MatType>::F() const {
   //obtaining uIi. Note that this is the transpose of belytschkos notation
   Eigen::Matrix<Scalar, 8, 3> u;
   for (int i = 0; i< 8; i++)
-    u.row(i) = node(i).u().transpose();
+    u.row(i) = this->node(i).u().transpose();
   //storage for the force
   Eigen::Matrix<Scalar, 8, 3> f = Eigen::Matrix<Scalar, 8, 3>::Zero();
 
@@ -144,10 +146,7 @@ typename C3D20R<MatType>::VectorType C3D20R<MatType>::F() const {
     // Commented code above is the same as the following expression. Eigen library
     //optimizations make run the code faster this way. Also the conditional allows 
     //to avoid having to clear the vector fi before using it.
-    if (i == 0)
-      Fi.noalias() = k*dhdX*GetMaterial().stress3D(E)*(H + Eigen::Matrix3d::Identity());
-    else
-      Fi.noalias() += k*dhdX*GetMaterial().stress3D(E)*(H + Eigen::Matrix3d::Identity());
+    Fi.noalias() += k*dhdX*GetMaterial().stress3D(E)*(H + Eigen::Matrix3d::Identity());
     }*/
 
   }
