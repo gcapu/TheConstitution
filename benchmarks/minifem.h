@@ -10,6 +10,42 @@
 
 namespace TC
 {
+//----------------------------------------------------------------------------
+// Integration points
+//----------------------------------------------------------------------------
+enum{
+  prism,
+  tet,
+  quad,
+  tri
+  };
+
+template <typename _Scalar, int type, int rule = 2>
+class GaussRule;
+
+template <typename _Scalar>
+class GaussRule<_Scalar, prism, 2>{
+public:
+  typedef typename _Scalar Scalar;
+  enum {
+    Dim = 3,
+    numPoints = 8,
+    };
+  typedef Eigen::Matrix<Scalar, Dim, numPoints> MatrixType;
+  typedef Eigen::Block<MatrixType, Dim, 1> ColXpr;
+protected:
+  MatrixType points;
+public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  GaussRule(){
+    Scalar d = 1/sqrt(3.);
+    points << -d, d, d,-d,-d, d, d,-d,
+              -d,-d, d, d,-d,-d, d, d,
+              -d,-d,-d,-d, d, d, d, d;
+    }
+  ColXpr point(int id) { return ColXpr(points, id); }
+  Scalar weight() { return 1.; }
+  };
 
 //----------------------------------------------------------------------------
 // Node
@@ -57,17 +93,21 @@ protected:
 public:
   Element(const std::vector<Node>& nodes): _nodes(nodes){}
   const Node& node(int nodeNumber) const {return _nodes[_conn[nodeNumber]];}
+  //set the connectivity from a container. returns true if succeeded.
   template <typename T>
-  void setConn(const T& conn){
-    if(conn.size() < _conn.size()) return;
+  bool setConn(const T& conn){
+    if(conn.size() < _conn.size()) false;
     for(int i = 0; i<_conn.size(); i++) 
       _conn[i] = conn[i];
+    return true;
     }
   };
 
 //Quadratic 3D element with 20 nodes and reduced integration.
 //We can template the material because all benchmarks contain contain 
 //  models with only one material. It's not a good idea otherwise.
+//For additional computaitonal savings, some terms relating the natural
+//  and material coordinates at the integration points are precalculated.
 template <typename MatType>
 class C3D20R: Element<typename MatType::Scalar, 3, 20>{
 public:
@@ -75,7 +115,8 @@ public:
   typedef typename Base::Scalar Scalar;
   typedef typename Base::Node Node;
   typedef typename Base::VectorType VectorType;
-  typedef typename Base::VectorType MatrixType;
+  typedef typename Base::MatrixType MatrixType;
+  class IntegrationPoint;
 protected:
   MatType _mat;
 public:
