@@ -9,7 +9,7 @@ namespace TC
 template <typename _Scalar, int _Dim>
 class AnisotropicLinear {
 public:
-  typedef typename _Scalar Scalar;
+  typedef _Scalar Scalar;
   enum {
     Dim = _Dim,
     StiffDim = _Dim == 3 ? 6 : 3
@@ -53,15 +53,15 @@ AnisotropicLinear<_Scalar, _Dim>::Stress(const Eigen::MatrixBase<Derived>& strai
   //I know this is bad. I'll improve it later.
   EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Derived, MatrixType);
   Eigen::Matrix<Scalar, StiffDim,1> strainVec;
-  strainVec.head<Dim>() = strain.diagonal();
-  strainVec.segment<Dim-1>(Dim) = strain.diagonal<1>();
+  strainVec.template head<Dim>() = strain.diagonal();
+  strainVec.template segment<Dim-1>(Dim) = strain.template diagonal<1>();
   if(Dim == 3) strainVec(5) = strain(0,2);
   MatrixType S;
   Eigen::Matrix<Scalar, StiffDim, 1> stressVec = Stiffness() * strainVec; 
-  S.diagonal() = stressVec.head<Dim>();
-  S.diagonal<1>() = stressVec.segment<Dim - 1>(Dim);
+  S.diagonal() = stressVec.template head<Dim>();
+  S.template diagonal<1>() = stressVec.segment<Dim - 1>(Dim);
   if (Dim == 3) S(0, 2) = stressVec(5);
-  S.triangularView<Eigen::StrictlyLower>() = S.triangularView<Eigen::StrictlyUpper>().transpose();
+  S.template triangularView<Eigen::StrictlyLower>() = S.template triangularView<Eigen::StrictlyUpper>().transpose();
   return S;// ;
   }
 

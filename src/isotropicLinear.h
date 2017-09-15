@@ -5,7 +5,6 @@
 
 namespace TC
 {
-
 template <typename _Scalar, int _Dim>
 class IsotropicLinear {
 public:
@@ -20,8 +19,9 @@ public:
 protected:
   Scalar _E;
   Scalar _nu;
+  Scalar _density;
 public:
-  IsotropicLinear(Scalar E, Scalar nu): _E(E), _nu(nu)
+  IsotropicLinear(Scalar E, Scalar nu, Scalar density = 1.): _E(E), _nu(nu), _density(density)
     {};
   template<typename Derived>
   MatrixType Stress(const Eigen::MatrixBase<Derived>& strain) const;
@@ -29,6 +29,7 @@ public:
   Scalar E() const { return _E; }
   Scalar nu() const { return _nu; }
   Scalar G() const {return .5*E() / (1 + nu());}
+  Scalar density() const {return _density;}
   };
 
 template <typename _Scalar, int _Dim>

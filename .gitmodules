@@ -1,0 +1,3 @@
+[submodule "minifem"]
+	path = minifem
+	url = https://github.com/copono/minifem
