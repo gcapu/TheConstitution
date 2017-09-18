@@ -61,6 +61,7 @@ if(TC_ENABLE_TESTS)
 		download_project(PROJ                googletest
 						 GIT_REPOSITORY      https://github.com/google/googletest.git
 						 GIT_TAG             master
+						 UPDATE_DISCONNECTED 1
 						 ${QUIET_DOWNLOAD_VAR}
 		)
 		# Prevent overriding the parent project's compiler/linker
@@ -80,8 +81,8 @@ if(TC_ENABLE_TESTS)
 	add_executable(tests ${TEST_SOURCES})
 	target_link_libraries(tests gtest_main TheConstitution)
 	#include(CTest)
-	enable_testing()
-	add_test(NAME dummy_test COMMAND tests)
+	#enable_testing()
+	#add_test(NAME dummy_test COMMAND tests)
 endif()
 
 if(TC_ENABLE_BENCHMARKS)
@@ -89,6 +90,7 @@ if(TC_ENABLE_BENCHMARKS)
 	download_project(PROJ                googlebenchmark
 					 GIT_REPOSITORY      https://github.com/google/benchmark.git
 					 GIT_TAG             master
+					 UPDATE_DISCONNECTED 1
 					 ${QUIET_DOWNLOAD_VAR}
 	)
 	#disabling the tests on google benchmark and creating the benchmark target.
@@ -99,7 +101,9 @@ if(TC_ENABLE_BENCHMARKS)
 	set_target_properties(benchmark PROPERTIES FOLDER thirdparty)
 	#Create the benchmarks
 	file(GLOB_RECURSE ALL_BENCH_CPP ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/*.cpp)
-	file(GLOB_RECURSE BENCHHDRS ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/*.h)
+	file(GLOB_RECURSE BENCHHDRS ${CMAKE_CURRENT_SOURCE_DIR}/minifem/*.h)
+	#set(BENCHHDRS ${BENCHHDRS} ${CMAKE_CURRENT_SOURCE_DIR}/minifem/minifem.h)
+  #message(${BENCHHDRS})
 	foreach(ONE_BENCH_CPP ${ALL_BENCH_CPP})
 		get_filename_component(ONE_BENCH_EXEC ${ONE_BENCH_CPP} NAME_WE)
 		# Avoid name collision 
@@ -109,11 +113,11 @@ if(TC_ENABLE_BENCHMARKS)
 		target_link_libraries(${TARGET_NAME} TheConstitution benchmark
 							  ${CMAKE_THREAD_LIBS_INIT})
 		# If you want to run benchmarks with the "make test" command, uncomment me
-		add_test(${TARGET_NAME} ${ONE_BENCH_EXEC})
+		#add_test(${TARGET_NAME} ${ONE_BENCH_EXEC})
 		#Grouping all the benchmarks in a single folder
 		set_target_properties(${TARGET_NAME} PROPERTIES FOLDER benchmarks)
 		target_include_directories(${TARGET_NAME} PUBLIC
-			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/benchmarks>)
+			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/minifem>)
 		target_sources(${TARGET_NAME} PRIVATE ${BENCHHDRS})
 	endforeach()
 	#Copy the input files used in some benchmarks

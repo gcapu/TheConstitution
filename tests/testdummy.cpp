@@ -38,7 +38,7 @@ TEST(isolinear, exists)
        0        , 0        , 0        , 0, 0, g;
   Eigen::Matrix<scalar,3,3> S;
   Eigen::Matrix<scalar,6,1> ev;
-  ev << E(0,0), E(1,1), E(2,2), E(0,1), E(0,2), E(1,2);
+  ev << E(0,0), E(1,1), E(2,2), 2*E(0,1), 2*E(0,2), 2*E(1,2);
   Eigen::Matrix<scalar,6,1> sv = K*ev;
   S << sv(0), sv(3), sv(4),
        sv(3), sv(1), sv(5),
@@ -55,13 +55,18 @@ TEST(anisolinear, exists)
   Eigen::Matrix<scalar, 6, 6> K = Eigen::Matrix<scalar, 6, 6>::Random() * 10.;
   Eigen::Matrix<scalar, 3, 3> S;
   Eigen::Matrix<scalar, 6, 1> ev;
-  ev << E(0, 0), E(1, 1), E(2, 2), E(0, 1), E(1, 2), E(0, 2);
+  ev << E(0, 0), E(1, 1), E(2, 2), 2*E(0, 1), 2*E(1, 2), 2*E(0, 2);
   Eigen::Matrix<scalar, 6, 1> sv = K*ev;
   S << sv(0), sv(3), sv(5),
-    sv(3), sv(1), sv(4),
-    sv(5), sv(4), sv(2);
+       sv(3), sv(1), sv(4),
+       sv(5), sv(4), sv(2);
   TC::AnisotropicLinear<scalar, 3> mat(K);
   EXPECT_TRUE(allclose(mat.Stiffness(), K));
+  EXPECT_TRUE(allclose(mat.Stiffness() * TC::StrainToVoigt(E), TC::StressToVoigt(S)));
   EXPECT_TRUE(allclose(mat.Stress(E), S));
+  //testing copy constructor
+  TC::AnisotropicLinear<scalar, 3> mat2(mat);
+  EXPECT_TRUE(allclose(mat2.Stiffness(), K));
+  EXPECT_TRUE(allclose(mat2.Stress(E), S));
   }
 

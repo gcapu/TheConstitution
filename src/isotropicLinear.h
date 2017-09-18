@@ -17,18 +17,19 @@ public:
   using MatrixType = Eigen::Matrix<Scalar, Dim, Dim>;
   using StiffType = Eigen::Matrix<Scalar, StiffDim, StiffDim>;
 protected:
-  Scalar _E;
-  Scalar _nu;
+  Scalar _lambda;
+  Scalar _mu;
   Scalar _density;
 public:
-  IsotropicLinear(Scalar E, Scalar nu, Scalar density = 1.): _E(E), _nu(nu), _density(density)
-    {};
+  IsotropicLinear(Scalar E, Scalar nu, Scalar density = 1.): 
+      _lambda(nu*E/(1.+nu)/(1.-2.*nu)), _mu(E/2./(1+nu)), _density(density) {};
   template<typename Derived>
-  MatrixType Stress(const Eigen::MatrixBase<Derived>& strain) const;
-  StiffType Stiffness() const;
-  Scalar E() const { return _E; }
-  Scalar nu() const { return _nu; }
-  Scalar G() const {return .5*E() / (1 + nu());}
+  inline MatrixType Stress(const Eigen::MatrixBase<Derived>& strain) const;
+  inline StiffType Stiffness() const;
+  Scalar E() const { return _mu*(3*_lambda + 2*_mu)/(_lambda + _mu); }
+  Scalar nu() const { return _lambda/2./(_lambda+_mu); }
+  Scalar mu() const {return _mu;}
+  Scalar lambda() const {return _lambda;}
   Scalar density() const {return _density;}
   };
 
@@ -36,10 +37,8 @@ template <typename _Scalar, int _Dim>
 typename IsotropicLinear<_Scalar, _Dim>::StiffType 
     IsotropicLinear<_Scalar, _Dim>::Stiffness() const
   {
-  StiffType K = StiffType::Zero();
-  Scalar ee = E()/((1+nu())*(1-2*nu()));
-  K.template topLeftCorner<Dim, Dim>() = MatrixType::Constant(nu()*ee) + (1-2*nu())*ee * MatrixType::Identity();
-  K.diagonal().template tail<StiffDim - Dim>() =  Eigen::Matrix<Scalar, StiffDim - Dim, 1>::Constant(G());
+  StiffType K = mu()* StiffType::Identity();
+  K.template topLeftCorner<Dim, Dim>() = MatrixType::Constant(lambda()) + 2.*mu() * MatrixType::Identity();
   return K;
   }
 
@@ -49,12 +48,7 @@ typename IsotropicLinear<_Scalar, _Dim>::MatrixType
     IsotropicLinear<_Scalar, _Dim>::Stress(const Eigen::MatrixBase<Derived>& strain) const
   {
   EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Derived, MatrixType);
-  MatrixType S;
-  Scalar ee = E()/((1.+nu())*(1.-2.*nu()));
-  Eigen::Matrix<_Scalar, Dim, 1> diag = (MatrixType::Constant(nu()*ee) + (1-2*nu())*ee * MatrixType::Identity()) * strain.derived().diagonal();
-  S = (MatrixType::Constant(G()) - G() * MatrixType::Identity()).cwiseProduct(strain.derived());
-  S += diag.asDiagonal();
-  return S;// ;
+  return lambda() * MatrixType::Identity() * strain.trace() + 2 * mu() * strain;
   }
 
 } //namespace TC

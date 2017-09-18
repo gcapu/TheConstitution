@@ -4,28 +4,6 @@
 namespace TC
 {
 
-enum materialMode {
-  M3D,
-  M2D,
-  PE,
-  PS,
-  GPS
-  };
-
-
-
-template<typename Material>
-struct material_traits
-  {
-  enum {
-    Dim = Material::Dim,
-    StiffDim = Material::StiffDim,
-    //Mode = Material::Mode
-    //IsProjective = (int(Mode) == int(Projective))
-    };
-  };
-
-
 template <typename T>
 class Material3D{
 public:
