@@ -40,7 +40,7 @@ Eigen::Matrix<Scalar, 3, 3> VoigtToStrain(const Eigen::Matrix<Scalar, 6, 1>& voi
   return S;
   }
 template <typename Scalar>
-Eigen::Matrix<Scalar, 2, 2> StrainToStrain(const Eigen::Matrix<Scalar, 3, 1>& voigt)
+Eigen::Matrix<Scalar, 2, 2> VoigtToStrain(const Eigen::Matrix<Scalar, 3, 1>& voigt)
   {
   Eigen::Matrix<Scalar, 2, 2> S;
   S << voigt(0), .5*voigt(2), .5*voigt(2), voigt(1);

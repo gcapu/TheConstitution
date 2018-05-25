@@ -2,7 +2,6 @@
 #include <Eigen/Core>
 #include "definitions.h"
 #include "materialBase.h"
-
 namespace TC
 {
 
@@ -60,7 +59,8 @@ typename AnisotropicLinear<_Scalar, _Dim>::MatrixType
 AnisotropicLinear<_Scalar, _Dim>::Stress(const Eigen::MatrixBase<Derived>& strain) const
   {
   EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Derived, MatrixType);
-  Eigen::Matrix<Scalar, StiffDim,1> strainVec = StrainToVoigt(strain.derived());
+  Eigen::Matrix<_Scalar, _Dim, _Dim> strainVal = strain.derived();
+  Eigen::Matrix<Scalar, StiffDim,1> strainVec = StrainToVoigt(strainVal);
   Eigen::Matrix<Scalar, StiffDim, 1> stressVec = Stiffness() * strainVec; 
   return VoigtToStress(stressVec);
   }

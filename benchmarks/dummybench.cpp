@@ -1,41 +1,33 @@
 #include "benchmark/benchmark.h"
-#include "minifem.h"
 #include "isotropicLinear.h"
 #include "anisotropicLinear.h"
 
 
 
 
-static void BM_mini_isotropic_F(benchmark::State &state) {
-  mini::FEM<double,3> mymodel;
+static void BM_isotropic_F(benchmark::State &state) {
   TC::IsotropicLinear<double, 3> iso(200e9, .3);
-  if(!mymodel.ReadAbaqusInp("../benchmark/input/bar-4x1x1-2el.inp", iso))
-    std::cout << "Warning: failed reading input file." << std::endl;
   while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(mymodel.F());
+    iso.Stress(Eigen::Matrix3d::Identity());
     }
   }
 
 // Register the function as a benchmark
-BENCHMARK(BM_mini_isotropic_F);
+BENCHMARK(BM_isotropic_F);
 
 //~~~~~~~~~~~~~~~~
-static void BM_mini_isotropic_K(benchmark::State &state) {
-  mini::FEM<double,3> mymodel;
+static void BM_isotropic_K(benchmark::State &state) {
   TC::IsotropicLinear<double, 3> iso(200e9, .3);
-  if(!mymodel.ReadAbaqusInp("../benchmark/input/bar-4x1x1-2el.inp", iso))
-    std::cout << "Warning: failed reading input file." << std::endl;
   while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(mymodel.K());
+    benchmark::DoNotOptimize(iso.Stiffness());
     }
   }
 
 // Register the function as a benchmark
-BENCHMARK(BM_mini_isotropic_K);
+BENCHMARK(BM_isotropic_K);
 
 //~~~~~~~~~~~~~~~~
-static void BM_mini_aniso_F(benchmark::State &state) {
-  mini::FEM<double,3> mymodel;
+static void BM_aniso_F(benchmark::State &state) {
   Eigen::Matrix<double, 6, 6> K;
   TC::IsotropicLinear<double, 3> li(200e9, .3);
   double lam = li.lambda();
@@ -48,19 +40,16 @@ static void BM_mini_aniso_F(benchmark::State &state) {
        0       , 0       , 0       , 0 , mu, 0,
        0       , 0       , 0       , 0 , 0 , mu;
   TC::AnisotropicLinear<double, 3> aniso(K);
-  if(!mymodel.ReadAbaqusInp("../benchmark/input/bar-4x1x1-2el.inp", aniso))
-    std::cout << "Warning: failed reading input file." << std::endl;
   while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(mymodel.F());
+    benchmark::DoNotOptimize(aniso.Stress(Eigen::Matrix3d::Identity()));
     }
   }
 
 // Register the function as a benchmark
-BENCHMARK(BM_mini_aniso_F);
+BENCHMARK(BM_aniso_F);
 
 //~~~~~~~~~~~~~~~~
-static void BM_mini_aniso_K(benchmark::State &state) {
-  mini::FEM<double,3> mymodel;
+static void BM_aniso_K(benchmark::State &state) {
   Eigen::Matrix<double, 6, 6> K;
   TC::IsotropicLinear<double, 3> li(200e9, .3);
   double lam = li.lambda();
@@ -73,15 +62,13 @@ static void BM_mini_aniso_K(benchmark::State &state) {
        0       , 0       , 0       , 0 , mu, 0,
        0       , 0       , 0       , 0 , 0 , mu;
   TC::AnisotropicLinear<double, 3> aniso(K);
-  if(!mymodel.ReadAbaqusInp("../benchmark/input/bar-4x1x1-2el.inp", aniso))
-    std::cout << "Warning: failed reading input file." << std::endl;
   while (state.KeepRunning()) {
-    benchmark::DoNotOptimize(mymodel.K());
+    benchmark::DoNotOptimize(aniso.Stiffness());
     }
   }
 
 // Register the function as a benchmark
-BENCHMARK(BM_mini_aniso_K);
+BENCHMARK(BM_aniso_K);
 
 //~~~~~~~~~~~~~~~~
 
