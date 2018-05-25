@@ -1,6 +1,6 @@
 #pragma once
 #include <Eigen/Core>
-#include "definitions.h"
+#include "utils.h"
 #include "materialBase.h"
 namespace TC
 {

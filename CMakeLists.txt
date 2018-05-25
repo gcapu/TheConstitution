@@ -116,13 +116,14 @@ if(TC_ENABLE_BENCHMARKS)
 		#add_test(${TARGET_NAME} ${ONE_BENCH_EXEC})
 		#Grouping all the benchmarks in a single folder
 		set_target_properties(${TARGET_NAME} PROPERTIES FOLDER benchmarks)
-		target_include_directories(${TARGET_NAME} PUBLIC
-			$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/minifem>)
+    #Old include for minifem
+		#target_include_directories(${TARGET_NAME} PUBLIC
+		#	$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/minifem>)
 		target_sources(${TARGET_NAME} PRIVATE ${BENCHHDRS})
 	endforeach()
-	#Copy the input files used in some benchmarks
-	file(GLOB INPUTBENCH ./benchmarks/input/*.inp)
-	file(COPY ${INPUTBENCH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/benchmark/input)
+	#Copy the input files used in some benchmarks (No longer used)
+	#file(GLOB INPUTBENCH ./benchmarks/input/*.inp)
+	#file(COPY ${INPUTBENCH} DESTINATION ${CMAKE_CURRENT_BINARY_DIR}/benchmark/input)
 endif()
 
 

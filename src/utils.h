@@ -8,9 +8,18 @@
 namespace TC
 {
 
+//Some useful conversion of elastic constants 
+//Warning: I could change these names for their descriptions. For example E -> ElasticModulus
 template <typename Scalar>
-inline Scalar shearModulus(Scalar E, Scalar nu) {return E / (2 * (1 + nu));}
-
+inline Scalar lambda(Scalar E, Scalar nu) {return E*nu / (1. + nu) / (1. - 2.*nu);}
+template <typename Scalar>
+inline Scalar mu(Scalar E, Scalar nu) {return E/2. / (1. + nu);}
+template <typename Scalar>
+inline Scalar kappa(Scalar E, Scalar nu) {return E/3. /(1. - 2.*nu);}
+template <typename Scalar>
+inline Scalar E(Scalar lambda, Scalar mu) {return mu * (3*lambda + 2*mu)/ (lambda + mu);}
+template <typename Scalar>
+inline Scalar nu(Scalar lambda, Scalar mu) {return 0.5*lambda / (lambda + mu);}
 
 //These functions convert stress and strains from and to voigt form.
 //Stress and strain have separate functions to consider the 2 multipliying the shear 
