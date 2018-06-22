@@ -1,7 +1,7 @@
 #pragma once
+#include <memory>
 #include <Eigen/Core>
 #include "utils.h"
-#include "materialBase.h"
 namespace TC
 {
 
@@ -16,7 +16,7 @@ public:
     Dim = _Dim,
     StiffDim = _Dim == 3 ? 6 : 3
     };
-  using MatrixType = Eigen::Matrix<Scalar, Dim, Dim>;
+  using StressType = Eigen::Matrix<Scalar, Dim, Dim>;
   using StiffType = Eigen::Matrix<Scalar, StiffDim, StiffDim>;
 protected:
   std::shared_ptr<StiffType> _matrix;
@@ -31,8 +31,8 @@ public:
   //Common functions
   Scalar density() const {return _density;}
   template<typename Derived>
-  MatrixType Stress(const Eigen::MatrixBase<Derived>& strain) const;
-  StiffType Stiffness() const {return *_matrix;}
+  inline StressType Stress(const Eigen::MatrixBase<Derived>& strain) const;
+  inline StiffType Stiffness() const {return *_matrix;}
   };
 
 template <typename _Scalar, int _Dim>
@@ -55,10 +55,10 @@ AnisotropicLinear<_Scalar, _Dim>::AnisotropicLinear(const AnisotropicLinear<Scal
 
 template <typename _Scalar, int _Dim>
 template <typename Derived>
-typename AnisotropicLinear<_Scalar, _Dim>::MatrixType
+typename AnisotropicLinear<_Scalar, _Dim>::StressType
 AnisotropicLinear<_Scalar, _Dim>::Stress(const Eigen::MatrixBase<Derived>& strain) const
   {
-  EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Derived, MatrixType);
+  EIGEN_STATIC_ASSERT_SAME_MATRIX_SIZE(Derived, StressType);
   Eigen::Matrix<_Scalar, _Dim, _Dim> strainVal = strain.derived();
   Eigen::Matrix<Scalar, StiffDim,1> strainVec = StrainToVoigt(strainVal);
   Eigen::Matrix<Scalar, StiffDim, 1> stressVec = Stiffness() * strainVec; 

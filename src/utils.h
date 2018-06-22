@@ -1,5 +1,5 @@
 #pragma once
-#include <Eigen/Core>
+#include <Eigen/Dense> 
 
 //
 // Helpers and miscelaneous functions. 
@@ -7,7 +7,7 @@
 
 namespace TC
 {
-
+//------------------------------------------------------------------------------------
 //Some useful conversion of elastic constants 
 //Warning: I could change these names for their descriptions. For example E -> ElasticModulus
 template <typename Scalar>
@@ -21,6 +21,91 @@ inline Scalar E(Scalar lambda, Scalar mu) {return mu * (3*lambda + 2*mu)/ (lambd
 template <typename Scalar>
 inline Scalar nu(Scalar lambda, Scalar mu) {return 0.5*lambda / (lambda + mu);}
 
+//------------------------------------------------------------------------------------
+// Voigt functions and expresssions
+// The exact order doesn't matter, but the first 3 components are the diagonal of the 3D
+//tensor (even in 2D). The off diagonal terms can have arbitrary size.
+
+//trace of a voigt vector. 
+template <typename T>
+inline typename T::Scalar vtrace(const T& vec){
+  static_assert(T::RowsAtCompileTime > 3, "Bad vtrace() use. Voigt vector must always have more than 3 components.");
+  return vec.template head<3>().sum();
+}
+//identity in voigt form
+template <typename Scalar, int Length>
+inline Eigen::Matrix<Scalar, Length, 1> videntity(){
+  static_assert(Length > 3, "Bad videntity() use. Voigt identity must always have more than 3 components.");
+  Eigen::Matrix<Scalar, Length, 1> vec;
+  vec.setZero();
+  vec.template head<3>() << 1,1,1;
+  return vec;
+}
+//doubles the off diagonal terms (can help with multiplications)
+template <typename T>
+inline T vmult_off_diag(const T& vec, typename T::Scalar scale = 2.){
+  static_assert(T::RowsAtCompileTime > 3, "Bad vmult_off_diag() use. Voigt vector must always have more than 3 components.");
+  T doubled = vec;
+  doubled.template tail<T::RowsAtCompileTime - 3>() *=scale;
+  return doubled;
+}
+//norm of the tensor 
+template <typename T>
+inline typename T::Scalar vnorm(const T& vec){
+  static_assert(T::RowsAtCompileTime > 3, "Bad vnorm() use. Voigt vector must always have more than 3 components.");
+  return vmult_off_diag(vec, sqrt(2)).norm();
+}
+//voigt matrix-vector product must double the off diagonal terms in the vector
+template <typename M, typename V>
+inline V vprod(const M& matrix, const V& vector){
+  static_assert(M::ColsAtCompileTime == V::RowsAtCompileTime, "Bad vprod() use. Matrix and Vector dimensions don't match.");
+  return matrix * vmult_off_diag(vector);
+}
+
+
+//------------------------------------------------------------------------------------
+
+//polar decomopositions:
+//right polar decomposition
+template <typename Scalar, int Dim>
+class PolarDecompositionRU{
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  using MatrixType = Eigen::Matrix<Scalar, Dim, Dim>;
+  //storage
+  MatrixType R;
+  MatrixType U;
+  MatrixType Uinv;
+  template<typename derived>
+  PolarDecompositionRU(const Eigen::MatrixBase<derived>& F){
+    static_assert(derived::RowsAtCompileTime == Dim && derived::ColsAtCompileTime == Dim, "Bad matrix size in polar decomposition.");
+    Eigen::SelfAdjointEigenSolver<derived> eigensolver(F.transpose()*F);
+    U = eigensolver.operatorSqrt();
+    Uinv = eigensolver.operatorInverseSqrt();
+    R = F*Uinv;
+    }
+};
+//left polar decomposition
+template <typename Scalar, int Dim>
+class PolarDecompositionVR{
+ public:
+  EIGEN_MAKE_ALIGNED_OPERATOR_NEW
+  using MatrixType = Eigen::Matrix<Scalar, Dim, Dim>;
+  //storage
+  MatrixType R;
+  MatrixType V;
+  MatrixType Vinv;
+  template<typename derived>
+  PolarDecompositionVR(const Eigen::MatrixBase<derived>& F){
+    static_assert(derived::RowsAtCompileTime == Dim && derived::ColsAtCompileTime == Dim, "Bad matrix size in polar decomposition.");
+    Eigen::SelfAdjointEigenSolver<derived> eigensolver(F*F.transpose());
+    V = eigensolver.operatorSqrt();
+    Vinv = eigensolver.operatorInverseSqrt();
+    R = Vinv*F;
+    }
+};
+
+//------------------------------------------------------------------------------------
 //These functions convert stress and strains from and to voigt form.
 //Stress and strain have separate functions to consider the 2 multipliying the shear 
 //  terms in the strain. They could easily be implemented in the same function, but I 
@@ -87,6 +172,8 @@ Eigen::Matrix<Scalar, 2, 2> VoigtToStress(const Eigen::Matrix<Scalar, 3, 1>& voi
   return S;
   }
 
+
+//------------------------------------------------------------------------------------
 //Expander (to be moved to minifem) W!!
 template <typename ArgType, typename ExpandType>
 class expand_functor {

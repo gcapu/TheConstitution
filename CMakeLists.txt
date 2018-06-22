@@ -19,7 +19,7 @@ endif()
 
 if(UNIX)
 	include_directories(/opt/local/include/eigen3)
-	add_definitions(-std=c++11 -stdlib=libc++ -DNDEBUG -DEIGEN_NO_DEBUG -O3 -g -Wall -DMACOS)
+	add_definitions(-std=c++11 -DNDEBUG -DEIGEN_NO_DEBUG -O3 -g -Wall -DMACOS)
 else()
 	find_path(EIGEN_INCLUDE_DIR Eigen3)
 	if(EIGEN_INCLUDE_DIR STREQUAL "EIGEN_INCLUDE_DIR-NOTFOUND")

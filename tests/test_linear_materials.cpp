@@ -1,5 +1,5 @@
 #include "gtest/gtest.h"
-#include "definitions.h"
+#include "utils.h"
 
 #include <chrono>
 #include <Eigen/Geometry>
@@ -28,7 +28,7 @@ TEST(isolinear, exists)
   Eigen::Matrix<scalar,6,6> K;
   scalar el = 200;
   scalar nu = 0.3;
-  scalar g = TC::shearModulus(el, nu);
+  scalar g = TC::mu(el, nu);
   scalar ee = el / ((1. + nu) * (1. - 2. * nu));
   K << (1-nu)*ee, nu*ee    , nu*ee    , 0, 0, 0,
        nu*ee    , (1-nu)*ee, nu*ee    , 0, 0, 0,

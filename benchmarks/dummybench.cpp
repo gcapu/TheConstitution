@@ -1,14 +1,16 @@
 #include "benchmark/benchmark.h"
+#include <fstream>
+
 #include "isotropicLinear.h"
 #include "anisotropicLinear.h"
-
+#include "plasticKinHard2DPE.h"
 
 
 
 static void BM_isotropic_F(benchmark::State &state) {
   TC::IsotropicLinear<double, 3> iso(200e9, .3);
   while (state.KeepRunning()) {
-    iso.Stress(Eigen::Matrix3d::Identity());
+    benchmark::DoNotOptimize(iso.Stress(Eigen::Matrix3d::Identity()));
     }
   }
 
@@ -69,6 +71,35 @@ static void BM_aniso_K(benchmark::State &state) {
 
 // Register the function as a benchmark
 BENCHMARK(BM_aniso_K);
+
+//~~~~~~~~~~~~~~~~
+static void BM_plasticKinHard_K(benchmark::State &state) {
+  std::vector<double> strainList;
+  std::vector<double> stressList;
+  //using anisotropic material with isotropic matrix
+  while (state.KeepRunning()) {
+    TC::PlasticKinHard2DPE<double, 3> mat(2, 2, 2, 0.0);
+    strainList.clear();
+    stressList.clear();
+    strainList.push_back(0);
+    stressList.push_back(0);
+    Eigen::Matrix3d strain;
+    for(int i = 0; i<100; i++)
+      {
+      double dsval = 3.1415/100.*cos(2.*3.1415*i/100.);
+      strain<< dsval , 0, 0, 0, 0, 0, 0, 0, 0;
+      TC::PlasticKinHard2DPE<double, 3>::ResultType result = mat.Increment(strain);
+      strainList.push_back(sin(2.*3.1415*(i+1)/100.)/2.);
+      stressList.push_back(result.S()(0,0));
+      }
+    }
+  std::ofstream file("./strain-stress.csv");
+  for(int i = 0; i<strainList.size(); i++)
+    file << strainList.at(i) << ", " << stressList.at(i) << std::endl;
+  }
+
+// Register the function as a benchmark
+BENCHMARK(BM_plasticKinHard_K);
 
 //~~~~~~~~~~~~~~~~
 
